@@ -1,7 +1,5 @@
 # app/routes/user_routes.py
 from flask import Blueprint, request, jsonify
-from app import db
-from app.models import User
 
 user_bp = Blueprint('user_bp', __name__)
 
@@ -11,11 +9,17 @@ def home():
 
 @user_bp.route('/users', methods=['GET'])
 def get_users():
+    # Import db and models locally inside the function to avoid circular import
+    from app import db
+    from app.models import User
     users = User.query.all()
     return jsonify([user.to_dict() for user in users])
 
 @user_bp.route('/users', methods=['POST'])
 def create_user():
+    # Import db and models locally inside the function to avoid circular import
+    from app import db
+    from app.models import User
     data = request.json
     new_user = User(name=data['name'], email=data['email'])
     db.session.add(new_user)
