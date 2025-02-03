@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app import db
+from app import db, bcrypt
 from app.models import User
 from flask_jwt_extended import create_access_token
 
@@ -11,9 +11,13 @@ def signup():
     if User.query.filter_by(email=data['email']).first():
         return jsonify({"error": "Email already exists"}), 400
 
-    new_user = User(name=data['name'], email=data['email'], password=data['password'])
+    # Hash the password before saving it
+    hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+
+    new_user = User(name=data['name'], email=data['email'], password=hashed_password)
     db.session.add(new_user)
     db.session.commit()
+
     return jsonify({"message": "User created successfully"}), 201
 
 
@@ -21,8 +25,14 @@ def signup():
 def login():
     data = request.get_json()
     user = User.query.filter_by(email=data['email']).first()
-    if not user or not user.check_password(data['password']):
+    if not user or not bcrypt.check_password_hash(user.password, data['password']):
         return jsonify({"error": "Invalid credentials"}), 401
 
+    # Generate JWT token
     token = create_access_token(identity=user.id)
-    return jsonify({"token": token, "user": user.to_dict()})
+
+    # Return user data without sensitive information (password)
+    user_data = user.to_dict()
+    user_data.pop('password', None)  # Remove password from the user data
+
+    return jsonify({"token": token, "user": user_data})
