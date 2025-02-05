@@ -1,10 +1,11 @@
 from app import db, bcrypt
-from flask_sqlalchemy import SQLAlchemy
 
 class User(db.Model):
+    __tablename__ = 'users'  # Explicit table name
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
 
     def __init__(self, name, email, password):
@@ -20,6 +21,8 @@ class User(db.Model):
 
 
 class Event(db.Model):
+    __tablename__ = 'events'
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)
     event_type = db.Column(db.String(50), nullable=False)
@@ -29,7 +32,7 @@ class Event(db.Model):
     time = db.Column(db.String(50), nullable=False)
     max_attendees = db.Column(db.Integer, nullable=False)
     status = db.Column(db.String(50), default="Active")  # Active, Postponed, Canceled
-    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     def to_dict(self):
         return {
@@ -44,10 +47,14 @@ class Event(db.Model):
             "status": self.status,
             "created_by": self.created_by
         }
+
+
 class RSVP(db.Model):
+    __tablename__ = 'rsvps'
+
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
 
     user = db.relationship('User', backref=db.backref('rsvps', lazy=True))
     event = db.relationship('Event', backref=db.backref('rsvps', lazy=True))

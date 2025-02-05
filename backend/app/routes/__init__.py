@@ -1,24 +1,13 @@
-from flask import Blueprint, request, jsonify
+# routes/__init__.py should only handle blueprint imports and registration
+from flask import Blueprint
 
-user_bp = Blueprint('user_bp', __name__)
+# Import blueprints from individual route files
+from app.routes.user_routes import user_bp
+from app.routes.auth_routes import auth_bp
+from app.routes.event_routes import event_bp
 
-@user_bp.route('/')
-def home():
-    return "Welcome to the Event Planner API!"
-
-@user_bp.route('/users', methods=['GET'])
-def get_users():
-    from app import db
-    from app.models import User
-    users = User.query.all()
-    return jsonify([user.to_dict() for user in users])
-
-@user_bp.route('/users', methods=['POST'])
-def create_user():
-    from app import db
-    from app.models import User
-    data = request.json
-    new_user = User(name=data['name'], email=data['email'])
-    db.session.add(new_user)
-    db.session.commit()
-    return jsonify(new_user.to_dict()), 201
+def register_routes(app):
+    # Register blueprints with the app
+    app.register_blueprint(user_bp, url_prefix='/users')  # Register user blueprint
+    app.register_blueprint(auth_bp, url_prefix='/auth')  # Register auth blueprint
+    app.register_blueprint(event_bp, url_prefix='/events')  # Register event blueprint
